@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ChatBubble from "../components/ChatBubble";
 
 export default function ChatPage() {
@@ -7,6 +7,14 @@ export default function ChatPage() {
   ]);
 
   const [input, setInput] = useState("");
+
+  // ✅ CORRECT: define ref here
+  const bottomRef = useRef(null);
+
+  // ✅ CORRECT: useEffect here
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -36,6 +44,9 @@ export default function ChatPage() {
           {messages.map((msg, i) => (
             <ChatBubble key={i} {...msg} />
           ))}
+
+          {/* ✅ IMPORTANT: Scroll anchor */}
+          <div ref={bottomRef} />
         </div>
 
         {/* Input Box */}
