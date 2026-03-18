@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import ChatBubble from "../components/ChatBubble";
 
 export default function ChatPage() {
@@ -28,7 +29,7 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    // Show typing
+    // Typing indicator ON
     setIsTyping(true);
 
     // Fake AI response
@@ -44,15 +45,37 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0f172a] text-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex h-screen bg-[#0f172a] text-white"
+    >
       
       {/* Sidebar */}
-      <div className="w-64 bg-[#020617] p-4">
-        <h1 className="text-xl font-bold">AI Chat</h1>
+      <div className="w-64 bg-[#020617] p-4 border-r border-gray-800">
+        <h1 className="text-xl font-bold mb-4">AI Chat</h1>
+
+        <button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded mb-4">
+          + New Chat
+        </button>
+
+        <div className="space-y-2 text-gray-400">
+          <div className="hover:bg-gray-800 p-2 rounded cursor-pointer">
+            Chat 1
+          </div>
+          <div className="hover:bg-gray-800 p-2 rounded cursor-pointer">
+            Chat 2
+          </div>
+        </div>
       </div>
 
       {/* Chat Area */}
       <div className="flex flex-col flex-1">
+
+        {/* Header */}
+        <div className="p-4 border-b border-gray-800 font-semibold">
+          Chat
+        </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6">
@@ -62,19 +85,19 @@ export default function ChatPage() {
 
           {/* Typing Indicator */}
           {isTyping && (
-            <div className="text-gray-400 flex gap-1 italic">
+            <div className="text-gray-400 flex gap-1 italic ml-2">
               <span className="animate-bounce">.</span>
               <span className="animate-bounce delay-100">.</span>
               <span className="animate-bounce delay-200">.</span>
             </div>
           )}
 
-          {/* Auto Scroll Anchor */}
+          {/* Auto scroll anchor */}
           <div ref={bottomRef} />
         </div>
 
         {/* Input Box */}
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-gray-800">
           <div className="flex gap-2">
             
             <input
@@ -99,6 +122,6 @@ export default function ChatPage() {
         </div>
 
       </div>
-    </div>
+    </motion.div>
   );
 }
