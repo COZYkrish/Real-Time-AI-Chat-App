@@ -7,14 +7,14 @@ export default function ChatPage() {
   ]);
 
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
-  // ✅ CORRECT: define ref here
   const bottomRef = useRef(null);
 
-  // ✅ CORRECT: useEffect here
+  // Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isTyping]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -24,8 +24,23 @@ export default function ChatPage() {
       content: input
     };
 
+    // Add user message
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+
+    // Show typing
+    setIsTyping(true);
+
+    // Fake AI response
+    setTimeout(() => {
+      const aiMessage = {
+        role: "assistant",
+        content: "This is a demo AI response 🤖"
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+      setIsTyping(false);
+    }, 1000);
   };
 
   return (
@@ -45,7 +60,16 @@ export default function ChatPage() {
             <ChatBubble key={i} {...msg} />
           ))}
 
-          {/* ✅ IMPORTANT: Scroll anchor */}
+          {/* Typing Indicator */}
+          {isTyping && (
+            <div className="text-gray-400 flex gap-1 italic">
+              <span className="animate-bounce">.</span>
+              <span className="animate-bounce delay-100">.</span>
+              <span className="animate-bounce delay-200">.</span>
+            </div>
+          )}
+
+          {/* Auto Scroll Anchor */}
           <div ref={bottomRef} />
         </div>
 
