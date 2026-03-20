@@ -15,14 +15,11 @@ export default function ChatPage() {
 
   // ✅ WebSocket connection
   const { sendMessage } = useWebSocket((msg) => {
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: msg }
-      ]);
-      setIsTyping(false);
-    }, 300);
-  });
+  setTimeout(() => {
+    setMessages((prev) => [...prev, msg]); // ✅ direct JSON
+    setIsTyping(false);
+  }, 300);
+});
 
   // Auto scroll
   useEffect(() => {
