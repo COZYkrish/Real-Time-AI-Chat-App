@@ -1,43 +1,95 @@
 import { useEffect, useRef } from "react";
 
+let sharedSocket = null;
+let subscriberCount = 0;
+let closeTimer = null;
+
+function getSocket() {
+  if (!sharedSocket || sharedSocket.readyState === WebSocket.CLOSED) {
+    sharedSocket = new WebSocket("ws://localhost:8000/ws");
+  }
+
+  return sharedSocket;
+}
+
+function scheduleSocketClose() {
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+  }
+
+  closeTimer = setTimeout(() => {
+    if (subscriberCount === 0 && sharedSocket) {
+      sharedSocket.close();
+      sharedSocket = null;
+    }
+
+    closeTimer = null;
+  }, 0);
+}
+
 export default function useWebSocket(onMessage) {
-  const ws = useRef(null);
+  const onMessageRef = useRef(onMessage);
+  const socketRef = useRef(null);
+
+  onMessageRef.current = onMessage;
 
   useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:8000/ws");
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
 
-    ws.current.onopen = () => {
-      console.log("✅ WebSocket Connected");
+    const socket = getSocket();
+    socketRef.current = socket;
+    subscriberCount += 1;
+
+    const handleOpen = () => {
+      console.log("WebSocket connected");
     };
 
-    ws.current.onmessage = (event) => {
+    const handleMessage = (event) => {
       const data = JSON.parse(event.data);
-      onMessage(data);
+      onMessageRef.current(data);
     };
 
-    ws.current.onclose = () => {
-      console.log("❌ WebSocket Disconnected");
+    const handleClose = () => {
+      console.log("WebSocket disconnected");
+
+      if (sharedSocket === socket) {
+        sharedSocket = null;
+      }
     };
 
-    ws.current.onerror = (error) => {
-      console.error("⚠️ WebSocket Error:", error);
+    const handleError = (error) => {
+      console.error("WebSocket error:", error);
     };
+
+    socket.addEventListener("open", handleOpen);
+    socket.addEventListener("message", handleMessage);
+    socket.addEventListener("close", handleClose);
+    socket.addEventListener("error", handleError);
 
     return () => {
-      ws.current.close();
+      socket.removeEventListener("open", handleOpen);
+      socket.removeEventListener("message", handleMessage);
+      socket.removeEventListener("close", handleClose);
+      socket.removeEventListener("error", handleError);
+
+      subscriberCount = Math.max(0, subscriberCount - 1);
+
+      if (subscriberCount === 0) {
+        scheduleSocketClose();
+      }
     };
   }, []);
 
   const sendMessage = (message) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(
-        JSON.stringify({
-          role: "user",
-          content: message
-        })
-      );
+    const socket = socketRef.current;
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
     } else {
-      console.warn("⚠️ WebSocket not connected yet");
+      console.warn("WebSocket not connected yet");
     }
   };
 

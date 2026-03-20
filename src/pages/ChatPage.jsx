@@ -7,21 +7,18 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([
     { role: "assistant", content: "Hello! How can I help you?" }
   ]);
-
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
   const bottomRef = useRef(null);
 
-  // ✅ WebSocket connection
-  const { sendMessage } = useWebSocket((msg) => {
-  setTimeout(() => {
-    setMessages((prev) => [...prev, msg]); // ✅ direct JSON
-    setIsTyping(false);
-  }, 300);
-});
+  const { sendMessage } = useWebSocket((message) => {
+    setTimeout(() => {
+      setMessages((prev) => [...prev, message]);
+      setIsTyping(false);
+    }, 300);
+  });
 
-  // Auto scroll
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({
@@ -32,19 +29,18 @@ export default function ChatPage() {
   }, [messages, isTyping]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    const content = input.trim();
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: input }
-    ]);
+    if (!content) return;
 
-    // Typing ON
+    const userMessage = {
+      role: "user",
+      content
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
-
-    // ✅ Send to backend (REAL)
-    sendMessage(input.trim());
-
+    sendMessage(userMessage);
     setInput("");
   };
 
@@ -54,8 +50,6 @@ export default function ChatPage() {
       animate={{ opacity: 1 }}
       className="flex h-screen bg-[#0f172a] text-white"
     >
-      
-      {/* Sidebar */}
       <div className="w-64 bg-[#020617] p-4 border-r border-gray-800">
         <h1 className="text-xl font-bold mb-4">AI Chat</h1>
 
@@ -73,21 +67,16 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Chat Area */}
       <div className="flex flex-col flex-1">
-
-        {/* Header */}
         <div className="p-4 border-b border-gray-800 font-semibold">
           Chat
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6">
           {messages.map((msg, i) => (
             <ChatBubble key={i} {...msg} />
           ))}
 
-          {/* Typing Indicator */}
           {isTyping && (
             <div className="text-gray-400 flex items-center gap-2 ml-2 mt-2">
               <span className="text-sm">AI is typing</span>
@@ -99,14 +88,11 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Auto scroll */}
           <div ref={bottomRef} />
         </div>
 
-        {/* Input */}
         <div className="p-4 border-t border-gray-800">
           <div className="flex gap-2">
-            
             <input
               type="text"
               value={input}
@@ -129,10 +115,8 @@ export default function ChatPage() {
             >
               Send
             </button>
-
           </div>
         </div>
-
       </div>
     </motion.div>
   );
