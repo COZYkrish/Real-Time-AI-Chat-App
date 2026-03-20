@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import ChatBubble from "../components/ChatBubble";
+import useWebSocket from "../hooks/useWebSocket";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([
@@ -11,6 +12,15 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
 
   const bottomRef = useRef(null);
+
+  // ✅ WebSocket connection
+  const { sendMessage } = useWebSocket((msg) => {
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: msg }
+    ]);
+    setIsTyping(false);
+  });
 
   // Auto scroll
   useEffect(() => {
@@ -27,21 +37,14 @@ export default function ChatPage() {
 
     // Add user message
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
 
-    // Typing indicator ON
+    // Typing ON
     setIsTyping(true);
 
-    // Fake AI response
-    setTimeout(() => {
-      const aiMessage = {
-        role: "assistant",
-        content: "This is a demo AI response 🤖"
-      };
+    // ✅ Send to backend (REAL)
+    sendMessage(input);
 
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsTyping(false);
-    }, 1000);
+    setInput("");
   };
 
   return (
@@ -92,11 +95,11 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Auto scroll anchor */}
+          {/* Auto scroll */}
           <div ref={bottomRef} />
         </div>
 
-        {/* Input Box */}
+        {/* Input */}
         <div className="p-4 border-t border-gray-800">
           <div className="flex gap-2">
             
