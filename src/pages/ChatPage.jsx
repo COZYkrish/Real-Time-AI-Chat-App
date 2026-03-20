@@ -15,34 +15,38 @@ export default function ChatPage() {
 
   // ✅ WebSocket connection
   const { sendMessage } = useWebSocket((msg) => {
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: msg }
-    ]);
-    setIsTyping(false);
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: msg }
+      ]);
+      setIsTyping(false);
+    }, 300);
   });
 
   // Auto scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end"
+      });
+    }
   }, [messages, isTyping]);
 
   const handleSend = () => {
     if (!input.trim()) return;
 
-    const userMessage = {
-      role: "user",
-      content: input
-    };
-
-    // Add user message
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: input }
+    ]);
 
     // Typing ON
     setIsTyping(true);
 
     // ✅ Send to backend (REAL)
-    sendMessage(input);
+    sendMessage(input.trim());
 
     setInput("");
   };
@@ -88,10 +92,13 @@ export default function ChatPage() {
 
           {/* Typing Indicator */}
           {isTyping && (
-            <div className="text-gray-400 flex gap-1 italic ml-2">
-              <span className="animate-bounce">.</span>
-              <span className="animate-bounce delay-100">.</span>
-              <span className="animate-bounce delay-200">.</span>
+            <div className="text-gray-400 flex items-center gap-2 ml-2 mt-2">
+              <span className="text-sm">AI is typing</span>
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+              </div>
             </div>
           )}
 
@@ -116,7 +123,12 @@ export default function ChatPage() {
 
             <button
               onClick={handleSend}
-              className="bg-blue-600 px-4 rounded-lg hover:bg-blue-700 transition active:scale-95"
+              disabled={!input.trim()}
+              className={`px-4 rounded-lg transition active:scale-95 ${
+                input.trim()
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-600 cursor-not-allowed"
+              }`}
             >
               Send
             </button>
