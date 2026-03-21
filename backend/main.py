@@ -1,38 +1,36 @@
-import json
 from fastapi import FastAPI, WebSocket
+import requests
 
 app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message": "Backend running 🚀"}
+def get_ai_response(message: str):
+    url = "http://localhost:11434/api/generate"
+
+    payload = {
+        "model": "llama3",
+        "prompt": message,
+        "stream": False
+    }
+
+    response = requests.post(url, json=payload)
+    data = response.json()
+
+    return data.get("response", "No response from AI")
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
     while True:
-        data = await websocket.receive_text()
+        data = await websocket.receive_json()
+        user_message = data["content"]
 
-        try:
-            message = json.loads(data)
-        except json.JSONDecodeError:
-            message = {}
+        print("User:", user_message)
 
-        role = message.get("role", "user")
-        user_text = str(message.get("content", "")).strip()
+        ai_reply = get_ai_response(user_message)
 
-        if role != "user" or not user_text:
-            response = {
-                "role": "assistant",
-                "content": "Please send a valid user message."
-            }
-            await websocket.send_text(json.dumps(response))
-            continue
-
-        response = {
+        await websocket.send_json({
             "role": "assistant",
-            "content": f"Echo: {user_text}"
-        }
-
-        await websocket.send_text(json.dumps(response))
+            "content": ai_reply
+        })
