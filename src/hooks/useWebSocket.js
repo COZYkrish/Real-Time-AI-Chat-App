@@ -75,18 +75,18 @@ export default function useWebSocket(onMessage) {
       }
     };
 
-  //   socket.addEventListener("message", handleMessage);
+    socket.addEventListener("message", handleMessage);
 
-  //   return () => {
-  //     socket.removeEventListener("message", handleMessage);
+    return () => {
+      socket.removeEventListener("message", handleMessage);
 
-  //     subscriberCount = Math.max(0, subscriberCount - 1);
+      subscriberCount = Math.max(0, subscriberCount - 1);
 
-  //     if (subscriberCount === 0) {
-  //       scheduleSocketClose();
-  //     }
-  //   };
-  // }, []);
+      if (subscriberCount === 0) {
+        scheduleSocketClose();
+      }
+    };
+  }, []);
 
   const sendMessage = (message) => {
     const socket = socketRef.current;
